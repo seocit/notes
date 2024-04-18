@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
@@ -18,7 +19,7 @@ class _NoteListScreenState extends State<NoteListScreen> {
       appBar: AppBar(
         title: const Text('Notes'),
       ),
-      body: const Placeholder(),
+      body: const NoteList(),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           showDialog(
@@ -59,14 +60,21 @@ class _NoteListScreenState extends State<NoteListScreen> {
                           Navigator.of(context).pop();
                         },
                         child: const Text('Cancel'),
-                      )
-                  ),
+                      )),
                   ElevatedButton(
-                    onPressed: (){
-                    Navigator.of(context).pop();
-                  },
-                    child: Text('Save')
-                  ), 
+                      onPressed: () {
+                        Map<String, dynamic> notes = {};
+                        notes['titles'] = _titleController.text;
+                        notes['description'] = _descriptionController.text;
+
+                        FirebaseFirestore.instance
+                            .collection('notes')
+                            .add(notes)
+                            .whenComplete(() {
+                          Navigator.of(context).pop();
+                        });
+                      },
+                      child: Text('Save')),
                 ],
               );
             },
@@ -76,5 +84,43 @@ class _NoteListScreenState extends State<NoteListScreen> {
         child: const Icon(Icons.add),
       ),
     );
+  }
+}
+
+class NoteList extends StatelessWidget {
+  const NoteList({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder(
+        stream: FirebaseFirestore.instance.collection('notes').snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return Text('Error: ${snapshot.error}');
+          }
+          switch (snapshot.connectionState) {
+            case ConnectionState.waiting:
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
+            default:
+              return ListView(
+                padding: const EdgeInsets.only(bottom: 80),
+                children: snapshot.data!.docs.map((document) {
+                  return Padding(
+                    padding:
+                        const EdgeInsets.symmetric(vertical: 3, horizontal: 10),
+                    child: Card(
+                      child: ListTile(
+                        onTap: () {},
+                        title: Text(document['titles']),
+                        subtitle: Text(document['description']),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              );
+          }
+        });
   }
 }

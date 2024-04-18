@@ -1,4 +1,3 @@
-import 'dart:html';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class NoteService {
@@ -12,7 +11,7 @@ class NoteService {
       querySnapshot.docs.map((docSnapshot) {
         final data = docSnapshot.data() as Map<String, String>;
         if (data.containsKey('title')) {
-          Map<dynamic, dynamic> values = data as Map<dynamic, dynamic>;
+          Map<dynamic, dynamic> values = data;
           values.forEach((key, value) {
             items[key] = value['title'] as String;
           });
