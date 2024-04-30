@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 
 class NoteListScreen extends StatefulWidget {
   const NoteListScreen({super.key});
@@ -26,12 +25,13 @@ class _NoteListScreenState extends State<NoteListScreen> {
             context: context,
             builder: (context) {
               return AlertDialog(
+                title: const Text('Update Notes'),
                 content: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text('Add'),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 10),
+                    const Padding(
+                      padding: EdgeInsets.only(top: 10),
                       child: Text(
                         'Title',
                         textAlign: TextAlign.start,
@@ -40,8 +40,8 @@ class _NoteListScreenState extends State<NoteListScreen> {
                     TextField(
                       controller: _titleController,
                     ),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 10),
+                    const Padding(
+                      padding: EdgeInsets.only(top: 10),
                       child: Text(
                         'Description',
                         textAlign: TextAlign.start,
@@ -54,7 +54,7 @@ class _NoteListScreenState extends State<NoteListScreen> {
                 ),
                 actions: [
                   Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 10),
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
                       child: ElevatedButton(
                         onPressed: () {
                           Navigator.of(context).pop();
@@ -64,7 +64,7 @@ class _NoteListScreenState extends State<NoteListScreen> {
                   ElevatedButton(
                       onPressed: () {
                         Map<String, dynamic> notes = {};
-                        notes['titles'] = _titleController.text;
+                        notes['title'] = _titleController.text;
                         notes['description'] = _descriptionController.text;
 
                         FirebaseFirestore.instance
@@ -74,7 +74,7 @@ class _NoteListScreenState extends State<NoteListScreen> {
                           Navigator.of(context).pop();
                         });
                       },
-                      child: Text('Save')),
+                      child: const Text('Save')),
                 ],
               );
             },
@@ -112,9 +112,97 @@ class NoteList extends StatelessWidget {
                         const EdgeInsets.symmetric(vertical: 3, horizontal: 10),
                     child: Card(
                       child: ListTile(
-                        onTap: () {},
-                        title: Text(document['titles']),
+                        onTap: () {
+                          showDialog(
+                              context: context,
+                              builder: (context) {
+                                TextEditingController titleController =
+                                    TextEditingController(
+                                        text: document['title']);
+                                TextEditingController descriptionController =
+                                    TextEditingController(
+                                        text: document['description']);
+                                return AlertDialog(
+                                  title: const Text('Update Notes'),
+                                  content: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        'Title : ',
+                                        textAlign: TextAlign.start,
+                                      ),
+                                      TextField(
+                                        controller: titleController,
+                                      ),
+                                      const Text('Add'),
+                                      const Padding(
+                                        padding: EdgeInsets.only(top: 10),
+                                        child: Text(
+                                          'Title',
+                                          textAlign: TextAlign.start,
+                                        ),
+                                      ),
+                                      TextField(
+                                        controller: titleController,
+                                      ),
+                                      const Padding(
+                                        padding: EdgeInsets.only(top: 10),
+                                        child: Text(
+                                          'Description',
+                                          textAlign: TextAlign.start,
+                                        ),
+                                      ),
+                                      TextField(
+                                        controller: descriptionController,
+                                      )
+                                    ],
+                                  ),
+                                  actions: [
+                                    Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 10),
+                                        child: ElevatedButton(
+                                          onPressed: () {
+                                            Navigator.of(context).pop();
+                                          },
+                                          child: const Text('Cancel'),
+                                        )),
+                                    ElevatedButton(
+                                        onPressed: () {
+                                          Map<String, dynamic> updateNotes = {};
+                                          updateNotes['title'] =
+                                              titleController.text;
+                                          updateNotes['description'] =
+                                              descriptionController.text;
+
+                                          FirebaseFirestore.instance
+                                              .collection('notes')
+                                              .doc(document.id)
+                                              .update(updateNotes)
+                                              .whenComplete(() {
+                                            Navigator.of(context).pop();
+                                          });
+                                        },
+                                        child: const Text('Update')),
+                                  ],
+                                );
+                              });
+                        },
+                        title: Text(document['title']),
                         subtitle: Text(document['description']),
+                        trailing: InkWell(
+                          onTap: () {
+                            FirebaseFirestore.instance
+                                .collection('notes')
+                                .doc(document.id)
+                                .delete();
+                          },
+                          child: const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 10),
+                            child: Icon(Icons.delete),
+                          ),
+                        ),
                       ),
                     ),
                   );
